@@ -44,17 +44,17 @@ function processField(field: SchemaType, parent: SelectableField) {
   let fieldPath = ``
   let title = ``
 
+  const shouldSkipField = typeof field.type === 'string' && field.type === 'document'
+
   // When we come across a `document` type, it is skipped over
-  const level =
-    typeof field.type === 'string' && field.type === 'document' ? parent.level : parent.level + 1
+  const level = shouldSkipField ? parent.level : parent.level + 1
 
   if (typeof field.type === 'string' && typeof parent.field.type === 'string') {
     switch (parent?.field?.type) {
       case 'array':
         fieldPath = parent.fieldPath.endsWith(`[]`) ? parent.fieldPath : `${parent.fieldPath}[]`
-        title = `${parent.title}, Array of ${field.name ? `"${createFieldTitle(field)}"` : ``} ${
-          field.type?.toUpperCase() === field.name?.toUpperCase() ? null : createFieldTitle(field)
-        }`
+        // fieldPath = `${parent.fieldPath}`
+        title = `${parent.title}, Array of ${createFieldTitle(field)}`
         break
       case 'reference':
         fieldPath = parent.fieldPath
@@ -62,9 +62,14 @@ function processField(field: SchemaType, parent: SelectableField) {
         break
       case 'document':
         fieldPath = `${parent.fieldPath}->${field.name ?? field.type}`
-        title = `Reference to ${
-          parent?.field?.title ?? toTitleCase(parent.field.name)
-        } -> ${createFieldTitle(field)}`
+        title = [
+          parent.title,
+          // `to`,
+          // parent?.field?.title ?? toTitleCase(parent.field.name),
+          `->`,
+          createFieldTitle(field),
+        ].join(' ')
+
         break
       default:
         fieldPath = level > 1 ? `${parent.fieldPath}.${field.name ?? field.type}` : parent.fieldPath
@@ -94,11 +99,9 @@ function getInnerFields(childFields: any[], parent: any): SelectableField[] {
     if (children.length) {
       const innerFields = getInnerFields(children, child)
 
+      // Document type is not queryable
       if (innerFields.length) {
-        return cur.type === 'document'
-          ? // Document type is not queryable
-            [...acc, ...innerFields]
-          : [...acc, child, ...innerFields]
+        return cur.type === 'document' ? [...acc, ...innerFields] : [...acc, child, ...innerFields]
       }
     }
 

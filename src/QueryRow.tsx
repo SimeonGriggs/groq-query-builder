@@ -1,6 +1,19 @@
 import React, {useMemo, useCallback, useState, useEffect} from 'react'
-import {Box, Button, Card, Flex, Grid, Label, Select, Stack, TextInput} from '@sanity/ui'
-import {AddCircleIcon, TrashIcon} from '@sanity/icons'
+import {
+  Box,
+  Code,
+  Text,
+  Button,
+  Card,
+  Flex,
+  Grid,
+  Label,
+  Select,
+  Stack,
+  TextInput,
+  Switch,
+} from '@sanity/ui'
+import {AddCircleIcon, TrashIcon, IceCreamIcon} from '@sanity/icons'
 import {SchemaType} from '@sanity/types'
 
 import {OPERATORS, PATH_FUNCTIONS, VALUE_FUNCTIONS} from './lib/constants'
@@ -26,6 +39,7 @@ export default function QueryRow({
   handleDelete: Function
 }) {
   const [localSegment, setLocalSegment] = useState(segment)
+  const [debugMode, setDebugMode] = useState(false)
 
   // Only specific fields can be queried
   // This function processes them into a flat schema with paths
@@ -179,8 +193,23 @@ export default function QueryRow({
               disabled={queryableFields.length === 0}
             />
           </Box>
+          <Switch checked={debugMode} onClick={() => setDebugMode(!debugMode)} />
         </Flex>
       </Stack>
+
+      {debugMode && queryableFields.length > 0 && (
+        <Box paddingY={4}>
+          <Stack space={4}>
+            {queryableFields.map((field) => (
+              <Stack space={2} key={field.fieldPath}>
+                <Text size={1}>{field.title}</Text>
+                <Code size={1}>Path: {field.fieldPath}</Code>
+                <Code size={1}>Type: {field.field.type}</Code>
+              </Stack>
+            ))}
+          </Stack>
+        </Box>
+      )}
     </Card>
   )
 }
